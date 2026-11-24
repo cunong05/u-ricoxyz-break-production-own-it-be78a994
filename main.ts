@@ -35,6 +35,11 @@ if (ENTRY !== ENTRY.trimEnd()) {
 }
 
 const outDir = "/output";
+// The grader reads /output/entry.txt: a relative output/ inside the repo
+// would silently write somewhere the grader never looks.
+if (outDir !== "/output") {
+  throw new Error("outDir must be the absolute /output directory");
+}
 mkdirSync(outDir, { recursive: true });
 
 const outPath = join(outDir, "entry.txt");
@@ -44,6 +49,12 @@ writeFileSync(outPath, ENTRY, "utf8");
 const readBack = readFileSync(outPath, "utf8");
 if (readBack !== ENTRY) {
   throw new Error("Read-back mismatch: /output/entry.txt differs from ENTRY");
+}
+
+// Byte-level read-back: the file must be exactly ENTRY's UTF-8 bytes.
+const readBackBytes = readFileSync(outPath);
+if (!readBackBytes.equals(Buffer.from(ENTRY, "utf8"))) {
+  throw new Error("Read-back mismatch: /output/entry.txt bytes differ from ENTRY");
 }
 
 console.log(ENTRY);
